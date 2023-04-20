@@ -23,6 +23,7 @@ term_years = ["1_1", "2_2", "3_2", "4_6", "5_8", "6_20", "7_9", "8_11", "9_13", 
 
 dict_array = []
 sorted_arr = []
+final_array = []
 
 #разбиваем каждый элемент массива на подмассив из 2-х элементов - id и value, сортируем по id и выстраеваем по возрастанию
 for i in range(len(sum)):
@@ -43,6 +44,6 @@ for i in range(len(sum)):
     end_sum = int(splited_sum[1]) + (int(splited_sum[1]) * int(splited_rate[1]) * int(splited_term[1]) // 100) #расчет суммы
     bank = {"id": i + 1, "start_sum": splited_sum[1], "rate": splited_rate[1], "term": splited_term[1], "end_sum": end_sum} #создание словаря
     print(bank) #вывод отдельного словаря
-    dict_array.append(bank) #добавление словаря в массив
+    final_array.append(bank) #добавление словаря в массив
 
-print(dict_array) #проверка наличия словарей в массиве
+print(final_array) #проверка наличия словарей в массиве
