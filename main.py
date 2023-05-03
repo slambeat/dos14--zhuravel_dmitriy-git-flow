@@ -12,7 +12,7 @@ def deposit_func(sum, percent, term):
 
 #читаем файл account.csv и формируем список словарей
 account = []
-with open('/home/dmitriy_zh/dos14_master_project/account.csv', 'r') as f:
+with open('./account.csv', 'r') as f:
     reader = csv.reader(f)
     for row in reader:
        account.append({'id' : row[0], 'amount' : row[1]})
@@ -27,13 +27,13 @@ account_int.sort(key = lambda x : x['id']) #сортируем список по
 
 #читаем файл credit.json и формируем список словарей
 credit = []
-with open('/home/dmitriy_zh/dos14_master_project/credit.json', 'r') as f:
+with open('./credit.json', 'r') as f:
     credit = json.loads(f.read())
 credit.sort(key = lambda x : x['id']) #сортируем список по id
 
 #читаем файл deposit.yaml и формируем список словарей
 deposit = []
-with open('/home/dmitriy_zh/dos14_master_project/deposit.yaml', 'r') as f:
+with open('./deposit.yaml', 'r') as f:
     deposit = yaml.safe_load(f)
 deposit.sort(key = lambda x : x['id']) #сортируем список по id
 
@@ -89,7 +89,7 @@ while month_count > 0:
                 i['term'] -= 1
             else:
                 print("Дорогой клиент " + str(account_int_id['id']) + ", срок депозита истек. Ваш остаток на счету: " + str(account_int_id['amount']))
-        with open('/home/dmitriy_zh/dos14_master_project/account_temp.csv', 'w') as f:
+        with open('./account_temp.csv', 'w') as f:
             writer = csv.writer(f)
             header = ['id','amount']
             writer.writerow(header)
