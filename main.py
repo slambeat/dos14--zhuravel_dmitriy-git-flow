@@ -2,12 +2,12 @@ import os, json, csv, time, yaml
 
 #фунция расчета кредита
 def credit_func(sum, percent, term):
-    month_cred = (sum + (sum * percent / 100) * term) / (term * 12)
+    month_cred = (sum * (1 + percent / 100) ** term) / (term * 12)
     return month_cred
 
 #функция расчета депозита
 def deposit_func(sum, percent, term):
-    month_dep =((sum * percent / 100) * term) / (term * 12)
+    month_dep = (sum * (1 + percent / 100) ** term) / (term * 12)
     return month_dep
 
 #читаем файл account.csv и формируем список словарей
