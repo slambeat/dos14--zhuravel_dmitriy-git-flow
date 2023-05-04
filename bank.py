@@ -41,7 +41,7 @@ for i in range(len(sum)):
     splited_sum = sorted_arr[i].split("_") #разделение id и значения
     splited_rate = rate[i].split("_") #разделение id и значения
     splited_term = term_years[i].split("_") #разделение id и значения
-    end_sum = int(splited_sum[1]) + (int(splited_sum[1]) * int(splited_rate[1]) * int(splited_term[1]) // 100) #расчет суммы
+    end_sum = int(int(splited_sum[1]) * (1 + int(splited_rate[1]) / 100) ** int(splited_term[1]))  #расчет суммы
     bank = {"id": i + 1, "start_sum": splited_sum[1], "rate": splited_rate[1], "term": splited_term[1], "end_sum": end_sum} #создание словаря
     print(bank) #вывод отдельного словаря
     final_array.append(bank) #добавление словаря в массив
