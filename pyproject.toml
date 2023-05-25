@@ -1,20 +1,22 @@
 [tool.poetry]
-name = "dos14-master-project"
+name = "homework19"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{include = "dos14_master_project"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+pyyaml = "^6.0"
+flask  = "*"
+account = { git = "https://github.com/ggramal/dos14-gramovich-git-flow.git", python = "^3.11", rev="master" }
 
 [tool.poetry.group.dev]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
+pytest = "^7.3.0"
 black = "^23.3.0"
-pyyaml = "^5.4.1"
 
 [build-system]
 requires = ["poetry-core"]
