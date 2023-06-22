@@ -6,6 +6,12 @@ from flask import Flask, abort, make_response, request
 app = Flask(__name__)
 import threading
 
+def FlaskThread():
+    app.run()
+
+if __name__ == '__main__':
+    threading.Thread(target=FlaskThread).start()
+
 cred_dep_base = []
 
 class BankProduct:
@@ -187,16 +193,17 @@ def create_deposit():
             json.dump(credit, f)
         return credit
                    
+counter = 1
 
-
-for i in cred_dep_base:
-    if i['type'] == 'credit':    
-        thread = threading.Thread(target=Credit.process, args=(Credit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
-        thread.start()
-    elif i['type'] == 'deposit':
-        thread = threading.Thread(target=Deposit.process, args=(Deposit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
-        thread.start()
-time.sleep(1)
+while counter > 0:
+    for i in cred_dep_base:
+        if i['type'] == 'credit':    
+            thread = threading.Thread(target=Credit.process, args=(Credit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
+            thread.start()
+        elif i['type'] == 'deposit':
+            thread = threading.Thread(target=Deposit.process, args=(Deposit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
+            thread.start()
+    time.sleep(1)
 
 
 
