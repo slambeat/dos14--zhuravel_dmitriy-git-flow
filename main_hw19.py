@@ -6,7 +6,14 @@ from flask import Flask, abort, make_response, request
 app = Flask(__name__)
 import threading
 
-cred_dep_base = []
+def FlaskThread():
+    app.run()
+
+if __name__ == '__main__':
+    threading.Thread(target=FlaskThread).start()
+
+cred_dep_base = []                
+counter = 1
 
 class BankProduct:
     def __init__(self, client_id, percent, term, sum):
@@ -188,7 +195,6 @@ def create_deposit():
         with open('credits_deposits.yaml', 'r') as f:
             json.dump(credit, f)
         return credit
-                   
 
 for i in cred_dep_base:
     if i['type'] == 'credit':    
