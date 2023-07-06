@@ -48,10 +48,11 @@ class Credit(BankProduct):
 
 
     def process(self):
-        AccountClientObj = AccountClient(self.__client_id)
-        print(AccountClientObj.withdraw)
-        AccountClientObj.transaction(substract=self.montly_fee)
- 
+        while counter > 0:
+            AccountClientObj = AccountClient(self.__client_id)
+            AccountClientObj.transaction(substract=self.montly_fee)
+            time.sleep(1)  
+
 class Deposit(BankProduct):
     def __init__(self, client_id, percent, term, sum, periods):
         BankProduct.__init__(self, client_id, percent, term, sum)
@@ -67,10 +68,11 @@ class Deposit(BankProduct):
         return self.__closed
     
     def process(self):
-        AccountClientObj = AccountClient(self.__client_id)
-        AccountClientObj.withdraw = False
-        print(AccountClientObj.withdraw)
-        AccountClientObj.transaction(add=self.montly_fee)
+        while counter > 0:
+            AccountClientObj = AccountClient(self.__client_id)
+            AccountClientObj.withdraw = False
+            AccountClientObj.transaction(add=self.montly_fee)
+            time.sleep(1)
 
         
 
@@ -188,15 +190,14 @@ def create_deposit():
         return credit
                    
 
-
 for i in cred_dep_base:
     if i['type'] == 'credit':    
-        thread = threading.Thread(target=Credit.process, args=(Credit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
+        thread = threading.Thread(target=Credit.process_thread, args=(Credit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
         thread.start()
     elif i['type'] == 'deposit':
-        thread = threading.Thread(target=Deposit.process, args=(Deposit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
+        thread = threading.Thread(target=Deposit.process_thread, args=(Deposit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
         thread.start()
-time.sleep(1)
+
 
 
 
