@@ -198,10 +198,10 @@ def create_deposit():
 
 for i in cred_dep_base:
     if i['type'] == 'credit':    
-        thread = threading.Thread(target=Credit.process_thread, args=(Credit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
+        thread = threading.Thread(target=Credit.process, args=(Credit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
         thread.start()
     elif i['type'] == 'deposit':
-        thread = threading.Thread(target=Deposit.process_thread, args=(Deposit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
+        thread = threading.Thread(target=Deposit.process, args=(Deposit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
         thread.start()
 
 
