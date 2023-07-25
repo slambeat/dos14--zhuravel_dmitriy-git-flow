@@ -6,6 +6,9 @@ from flask import Flask, abort, make_response, request
 app = Flask(__name__)
 import threading
 
+cred_dep_base = []
+counter = 500
+
 class BankProduct:
     def __init__(self, client_id, percent, term, sum):
         # self.__entity_id = entity_id
@@ -46,11 +49,13 @@ class Credit(BankProduct):
 
 
     def process(self):
-        AccountClientObj = AccountClient(self.__client_id)
-        BankObj = AccountClient(0)
-        AccountClientObj.transaction(substract=self.montly_fee)
-        BankObj.transaction(add=self.montly_fee)
-
+        while counter > 0:
+            AccountClientObj = AccountClient(self.__client_id)
+            AccountClientObj.transaction(substract=self.montly_fee)
+            time.sleep(1)  
+    
+    def transaction(self, sum):
+        sum -= self.montly_fee
 
 class Deposit(BankProduct):
     def __init__(self, client_id, percent, term, sum, periods):
@@ -67,40 +72,49 @@ class Deposit(BankProduct):
         return self.__closed
     
     def process(self):
-        AccountClientObj = AccountClient(self.__client_id)
-        AccountClientObj.withdraw = False
-        BankObj = AccountClient(0)
-        AccountClientObj.transaction(add=self.montly_fee)
-        BankObj.transaction(substract=self.montly_fee)
-       
+        while counter > 0:
+            AccountClientObj = AccountClient(self.__client_id)
+            AccountClientObj.withdraw = False
+            AccountClientObj.transaction(add=self.montly_fee)
+            time.sleep(1)
+
+    def transaction(self, new_sum):
+        while counter > 0:
+            new_sum += self.montly_fee
+            print(new_sum, self.montly_fee)
+            time.sleep(5)
+        
 
 with open('credits_deposits_temp.yaml', 'r') as f:
     credit = yaml.safe_load(f)
 
+print(credit)
+
+
 for i in credit['credit']:
-    if i['periods'] == -1:
-        i['periods'] = i['term'] * 12
-    with open('credits_deposits_temp.yaml', 'w') as f:
-        yaml.dump(credit, f)
+    cred_dep_base.append({'client_id': int(i['client_id']), 'percent': int(i['percent']), 'sum': int(i['sum']), 'term': int(i['term']), 'type': 'credit', 'periods' : int(i['periods'])})
+    print(i)
 
 for i in credit['deposit']:
-    if i['periods'] == -1:
-        i['periods'] = i['term'] * 12
-    with open('credits_deposits_temp.yaml', 'w') as f:
-        yaml.dump(credit, f)
+    cred_dep_base.append({'client_id': int(i['client_id']), 'percent': int(i['percent']), 'sum': int(i['sum']),'term': int(i['term']), 'type': 'deposit', 'periods' : int(i['periods'])})
+    print(i)
 
-with open('credits_deposits_temp.yaml', 'w') as f:
-    yaml.dump(credit, f)
+print(cred_dep_base)
 
 id_list_cred = []
 id_list_dep = []
+for i in cred_dep_base:
+    if i['type'] == 'credit':
+        id_list_cred.append(i['client_id'])
+        print(id_list_cred)
+    if i['type'] == 'deposit':
+        id_list_dep.append(i['client_id'])
+        print(id_list_dep)
 
-for i in credit['credit']:
-    id_list_cred.append(i['client_id'])
 
-for i in credit['deposit']:
-    id_list_dep.append(i['client_id'])
-
+@app.route("/api/v1/accounts", methods=["GET"])
+def read_account():
+    return cred_dep_base
 
 @app.route("/api/v1/deposit/<int:client_id>", methods=["GET"])
 def read_deposit(client_id):
@@ -108,8 +122,8 @@ def read_deposit(client_id):
     response.status = 400
     response_not_found = make_response({"status": "error", "message": f"There is no such client in the base"})
     response_not_found.status = 404
-    for i in credit['deposit']:
-        if i['client_id'] == int(client_id):
+    for i in cred_dep_base:
+        if i['client_id'] == int(client_id) and i['type'] == 'deposit':
             return i
         elif i['client_id'] == int(client_id) and int(client_id) not in id_list_dep:
             return response
@@ -122,8 +136,8 @@ def read_credit(client_id):
     response.status = 400
     response_not_found = make_response({"status": "error", "message": f"There is no such client in the base"})
     response_not_found.status = 404
-    for i in credit['credit']:
-        if i['client_id'] == int(client_id):
+    for i in cred_dep_base:
+        if i['client_id'] == int(client_id) and i['type'] == 'credit':
             return i
         elif i['client_id'] == int(client_id) and int(client_id) not in id_list_cred:
             return response
@@ -133,19 +147,20 @@ def read_credit(client_id):
 @app.route("/api/v1/credits", methods=["GET"])
 def read_credit_all():
     all_cred = []
-    for i in credit['credit']:
-        all_cred.append(i)
+    for i in cred_dep_base:
+        if i['type'] == 'credit':
+            all_cred.append(i)
     return all_cred
 
 
 @app.route("/api/v1/deposits", methods=["GET"])
 def read_deposit_all():
     all_dep = []
-    for i in credit['deposit']:
-        all_dep.append(i)
+    for i in cred_dep_base:
+        if i['type'] == 'deposit':
+            all_dep.append(i)
     return all_dep
 
-# curl --request PUT --header 'Content-Type: application/json' --data '{"client_id": 27, "percent": 13, "sum": 100000, "term": 2}' localhost:5000/api/v1/credits
 @app.route("/api/v1/credits", methods=["PUT"])
 def create_credit():
     new_credit = request.json
@@ -158,15 +173,16 @@ def create_credit():
         credit_data ={
             "client_id": new_credit['client_id'],
             "percent": new_credit['percent'],
-            "periods": new_credit['term'] * 12,
+            "periods": -1,
             "sum": new_credit['sum'],
             "term": new_credit['term']
         }
-        credit['credit'].append(credit_data)     
+        credit['credit'].append(credit_data)        
         id_list_cred.append(new_credit['client_id'])
-        with open('credits_deposits_temp.yaml', 'w') as f:
+        with open('credits_deposits.yaml', 'w') as f:
             yaml.dump(credit, f)
-        return credit                  
+        return credit
+                   
 
 @app.route("/api/v1/deposits", methods=["PUT"])
 def create_deposit():
@@ -180,56 +196,32 @@ def create_deposit():
         deposit_data ={
             "client_id": new_deposit['client_id'],
             "percent": new_deposit['percent'],
-            "periods": new_deposit['term'] * 12,
+            "periods": -1,
             "sum": new_deposit['sum'],
             "term": new_deposit['term']
             }
         credit['deposit'].append(deposit_data)
         id_list_dep.append(new_deposit['client_id'])
-        with open('credits_deposits_temp.yaml', 'w') as f:
+        with open('credits_deposits.yaml', 'r') as f:
             json.dump(credit, f)
         return credit
+                   
+for i in cred_dep_base:
+    if i['type'] == 'credit':    
+        thread_1 = threading.Thread(target=Credit.process, args=(Credit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
+        thread_1.start()
+        thread_2 = threading.Thread(target=Credit.transaction, args=(Credit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),i['sum'],))
+        thread_2.start()
+    elif i['type'] == 'deposit':
+        thread_3 = threading.Thread(target=Deposit.process, args=(Deposit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),))
+        thread_3.start()
+        thread_4 = threading.Thread(target=Deposit.transaction, args=(Deposit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods']),i['sum'],))
+        thread_4.start()
 
-def process_thread():
-    while id_list_cred != [] or id_list_dep != []:               
-        for i in credit['credit']:
-            if i['periods'] == 0:
-                credit_data ={
-                    "client_id": i['client_id'],
-                    "percent": i['percent'],
-                    "periods": i['periods'],
-                    "sum": i['sum'],
-                    "term": i['term'],
-                }
-                credit['credit'].remove(credit_data)
-                id_list_cred.remove(i['client_id'])
-            elif i['periods'] > 0:
-                obj = Credit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods'])
-                obj.process()
-                i['periods'] -= 1
-        for i in credit['deposit']:
-            if i['periods'] == 0:
-                deposit_data ={
-                    "client_id": i['client_id'],
-                    "percent": i['percent'],
-                    "periods": i['periods'],
-                    "sum": i['sum'],
-                    "term": i['term'],
-                }
-                credit['deposit'].remove(deposit_data)
-                id_list_dep.remove(i['client_id'])
-            elif i['periods'] > 0:
-                obj = Deposit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods'])
-                obj.process()
-                i['periods'] -= 1
-        with open('credits_deposits_temp.yaml', 'w') as f:
-            yaml.dump(credit, f)
-        time.sleep(1)
 
-def base_check():
-    while True:
-        if id_list_cred != [] or id_list_dep != []:
-            process_thread()
 
-thread = threading.Thread(target=base_check)
-thread.start()
+
+
+
+
+
