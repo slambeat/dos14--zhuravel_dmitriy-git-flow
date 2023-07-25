@@ -74,22 +74,23 @@ class Deposit(BankProduct):
         BankObj.transaction(substract=self.montly_fee)
        
 
-with open('credits_deposits_temp.yaml', 'r') as f:
+with open('credits_deposits.yaml', 'r') as f:
     credit = yaml.safe_load(f)
 
+#Этот блок только для заполнения periods, выполняется только если term=-1
 for i in credit['credit']:
     if i['periods'] == -1:
         i['periods'] = i['term'] * 12
-    with open('credits_deposits_temp.yaml', 'w') as f:
+    with open('credits_deposits.yaml', 'w') as f:
         yaml.dump(credit, f)
 
 for i in credit['deposit']:
     if i['periods'] == -1:
         i['periods'] = i['term'] * 12
-    with open('credits_deposits_temp.yaml', 'w') as f:
+    with open('credits_deposits.yaml', 'w') as f:
         yaml.dump(credit, f)
 
-with open('credits_deposits_temp.yaml', 'w') as f:
+with open('credits_deposits.yaml', 'w') as f:
     yaml.dump(credit, f)
 
 id_list_cred = []
@@ -164,7 +165,7 @@ def create_credit():
         }
         credit['credit'].append(credit_data)     
         id_list_cred.append(new_credit['client_id'])
-        with open('credits_deposits_temp.yaml', 'w') as f:
+        with open('credits_deposits.yaml', 'w') as f:
             yaml.dump(credit, f)
         return credit                  
 
@@ -186,7 +187,7 @@ def create_deposit():
             }
         credit['deposit'].append(deposit_data)
         id_list_dep.append(new_deposit['client_id'])
-        with open('credits_deposits_temp.yaml', 'w') as f:
+        with open('credits_deposits.yaml', 'w') as f:
             json.dump(credit, f)
         return credit
 
@@ -222,7 +223,7 @@ def process_thread():
                 obj = Deposit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods'])
                 obj.process()
                 i['periods'] -= 1
-        with open('credits_deposits_temp.yaml', 'w') as f:
+        with open('credits_deposits.yaml', 'w') as f:
             yaml.dump(credit, f)
         time.sleep(1)
 
