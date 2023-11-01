@@ -1,0 +1,16 @@
+[Unit]
+Description=processing
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/home/bank/repo
+ExecStart=/bin/bash -c "docker-compose up"
+ExecStop=/bin/bash -c "docker-compose down"
+Restart=on-fail
+StartLimitInterval=0
+
+[Install]
+WantedBy=multi-user.target
+
