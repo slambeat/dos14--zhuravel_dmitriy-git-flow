@@ -1,0 +1,36 @@
+version: "3.4"
+
+services:
+  bank_service:
+    container_name: py_service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+    networks:
+        bank_net:
+          ipv4_address: 172.20.0.3
+
+  nginx:
+    container_name: nginx
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    networks:
+        bank_net:
+          ipv4_address: 172.20.0.4
+    depends_on:
+      - bank_service
+    ports:
+      - 80:80
+    volumes:
+      - /home/bank/repo/nginx-logs:/var/log/nginx
+
+networks:
+  bank_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
