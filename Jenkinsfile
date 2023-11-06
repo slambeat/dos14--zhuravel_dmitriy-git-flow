@@ -23,7 +23,6 @@ pipeline {
       stage('Build') {
         when {
           anyOf {
-            branch pattern: "master"
             branch pattern: "develop"
           }
         }
