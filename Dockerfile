@@ -18,4 +18,4 @@ RUN poetry install
 
 ENTRYPOINT ["poetry", "run"]
 
-CMD ["python", "main_hw19.py"]
+CMD ["python", "main.py"]
