@@ -29,7 +29,7 @@ pipeline {
         }
         steps {
           script {
-            def image = docker.build "slambeat/bank:${env.GIT_COMMIT}"
+            def image = docker.build "slambeat/bank_app:${env.GIT_COMMIT}"
             docker.withRegistry('','dockerhub-slambeat') {
               image.push()
           }
