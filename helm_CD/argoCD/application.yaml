@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: 'https://github.com/slambeat/dos14--zhuravel_dmitriy-git-flow.git'
     path: helm_CD/bank
-    targetRevision: feature-CD
+    targetRevision: feature-helm-CD
     helm:
       valueFiles:
         - /helm_CD/bank/values.yaml

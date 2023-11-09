@@ -35,22 +35,22 @@ spec:
         - name: {{ include "bank.fullname" . }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}
           env:
-          - name: PG_DATABASE
-            value: gigachadbank
-          - name: PG_USER
+          - name: {{ .Values.envVariables.dbEnv.name }}
+            value: {{ .Values.envVariables.dbEnv.dbname }}
+          - name: {{ .Values.envVariables.userEnv.name }}
             valueFrom:
               secretKeyRef:
-                key: username
-                name: gigachad-db-creds
-          - name: PG_PASSWORD
+                key: {{ .Values.envVariables.userEnv.secret_key }}
+                name: {{ .Values.envVariables.userEnv.secret_name }}
+          - name: {{ .Values.envVariables.passEnv.name }}
             valueFrom:
               secretKeyRef:
-                key: password
-                name: gigachad-db-creds
-          - name: PG_HOST
-            value: omegabank-rds-tf.cearikylb8tb.eu-west-1.rds.amazonaws.com
-          - name: PG_PORT
-            value: "5432"
+                key: {{ .Values.envVariables.passEnv.secret_key }}
+                name: {{ .Values.envVariables.passEnv.secret_name }}
+          - name: {{ .Values.envVariables.hostEnv.name }}
+            value: {{ .Values.envVariables.hostEnv.host }}
+          - name: {{ .Values.envVariables.hostEnv.name }}
+            value: {{ .Values.envVariables.hostEnv.port }}
       volumes:
         - configMap:
             name: {{ include "bank.name" . }}-nginx-config

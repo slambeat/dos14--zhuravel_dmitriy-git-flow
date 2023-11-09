@@ -63,3 +63,22 @@ labels:
   app: bank
   bank: gigachad
   env: prd
+envVariables:
+  dbEnv:
+    name: PG_DATABASE
+    dbname: gigachadbank
+  userEnv:
+    name: PG_USER
+    secret_key: username
+    secret_name: gigachad-db-creds
+  passEnv:
+    name: PG_PASSWORD
+    secret_key: password
+    secret_name: gigachad-db-creds
+  hostEnv:
+    name: PG_HOST
+    host: omegabank-rds-tf.cearikylb8tb.eu-west-1.rds.amazonaws.com
+  portEnv:
+    name: PG_PORT
+    port: "5432"
+
