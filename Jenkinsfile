@@ -38,7 +38,7 @@ pipeline {
       }
     }
     stage('Update Helm Chart') {
-      when { expression { build == "${env.GIT_COMMIT}" } }
+      when { expression { build == "${env.GIT_COMMIT}" &&  "${env.BRANCH_NAME}" == "master"} }
       steps {
         sh "git checkout feature-helm-CD"
         sh "git config --global pull.rebase true"
@@ -56,7 +56,7 @@ pipeline {
           withCredentials([string(credentialsId: 'zdo_github_token', variable: 'SECRET')]) {
                 sh('git config --global user.email "sphynxx.mail@gmail.com" && git config --global user.name "Jenkins"')
                 sh('git add .')
-                sh('git commit -m "JENKINS: add new image tag ("${env.GIT_COMMIT}") tag in helm chart tag for CD"')
+                sh('git commit -m "JENKINS: add new image tag tag in helm chart tag for CD"')
                 sh('git remote set-url origin https://${SECRET}@github.com/slambeat/dos14--zhuravel_dmitriy-git-flow.git')
                 sh('git push origin feature-helm-CD')
           }
