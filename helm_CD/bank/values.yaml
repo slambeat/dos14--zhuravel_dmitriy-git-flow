@@ -2,7 +2,7 @@ replicaCount: 2
 image:
   repository: slambeat/bank_app
   pullPolicy: IfNotPresent
-  tag: ""
+  tag: 6f1b0d76a2db7334f6b341751f968fda133706fa
 imagePullSecrets: []
 nameOverride: ''
 fullnameOverride: ''
@@ -80,5 +80,4 @@ envVariables:
     host: omegabank-rds-tf.cearikylb8tb.eu-west-1.rds.amazonaws.com
   portEnv:
     name: PG_PORT
-    port: "5432"
-
+    port: '5432'
