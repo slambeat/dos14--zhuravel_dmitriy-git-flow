@@ -38,7 +38,7 @@ pipeline {
       }
     }
     stage('Update Helm Chart') {
-      when { expression { build == "${env.GIT_COMMIT}" &&  "${env.BRANCH_NAME}" == "master"} }
+      when { expression { build == "${env.GIT_COMMIT}" &&  "${env.BRANCH_NAME}" == "develop"} }
       steps {
         sh "git checkout feature-helm-CD"
         sh "git config --global pull.rebase true"
