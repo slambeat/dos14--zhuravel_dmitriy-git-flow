@@ -43,7 +43,7 @@ spec:
             httpGet:
               host:
               scheme: HTTP
-              path: /api/v1/bank/healt_check
+              path: /api/v1/bank/health_check
               port: 80            
           env:
           - name: {{ .Values.envVariables.dbEnv.name }}
