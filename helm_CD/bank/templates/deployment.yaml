@@ -42,7 +42,7 @@ spec:
               host: 127.0.0.1
               scheme: HTTP
               path: /api/v1/bank/health_check
-              port:   
+              port: 80  
         - name: {{ include "bank.fullname" . }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}
           readinessProbe:
