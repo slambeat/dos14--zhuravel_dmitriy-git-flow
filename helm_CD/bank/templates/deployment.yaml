@@ -42,20 +42,20 @@ spec:
               host:
               scheme: HTTP
               path: /api/v1/bank/health_check
-              port: 80  
+              port: 5000  
         - name: {{ include "bank.fullname" . }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}
-          # readinessProbe:
-          #   initialDelaySeconds: 1
-          #   periodSeconds: 2
-          #   timeoutSeconds: 1
-          #   successThreshold: 1
-          #   failureThreshold: 1
-          #   httpGet:
-          #     host:
-          #     scheme: HTTP
-          #     path: /api/v1/bank/health_check
-          #     port: 80            
+          readinessProbe:
+            initialDelaySeconds: 1
+            periodSeconds: 2
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 1
+            httpGet:
+              host:
+              scheme: HTTP
+              path: /api/v1/bank/health_check
+              port: 5000            
           env:
           - name: {{ .Values.envVariables.dbEnv.name }}
             value: {{ .Values.envVariables.dbEnv.dbname }}
