@@ -57,19 +57,19 @@ spec:
               port: 80  
         - name: {{ include "bank.fullname" . }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}
-          livenessProbe:
-            initialDelaySeconds: 1
-            periodSeconds: 5
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 1
-            args:
-              - /bin/sh
-              - -c
-            exec:
-              command:
-                - cat
-                - /home/bank/repo/main.py
+          # livenessProbe:
+          #   initialDelaySeconds: 1
+          #   periodSeconds: 5
+          #   timeoutSeconds: 1
+          #   successThreshold: 1
+          #   failureThreshold: 1
+          #   args:
+          #     - /bin/sh
+          #     - -c
+          #   exec:
+          #     command:
+          #       - cat
+          #       - home/bank/repo/main.py
           readinessProbe:
             initialDelaySeconds: 1
             periodSeconds: 2
