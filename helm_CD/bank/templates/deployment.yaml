@@ -32,16 +32,16 @@ spec:
           volumeMounts:
             - name: {{ .Values.volumeMounts.name }}
               mountPath: {{ .Values.volumeMounts.mountPath }}
-          livenessProbe:
-            initialDelaySeconds: 1
-            periodSeconds: 5
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 1
-            exec:
-              command:
-                - cat
-                - /etc/nginx/nginx.conf
+          # livenessProbe:
+          #   initialDelaySeconds: 1
+          #   periodSeconds: 5
+          #   timeoutSeconds: 1
+          #   successThreshold: 1
+          #   failureThreshold: 1
+          #   exec:
+          #     command:
+          #       - cat
+          #       - /etc/nginx/nginx.conf
           readinessProbe:
             initialDelaySeconds: 1
             periodSeconds: 2
@@ -54,16 +54,16 @@ spec:
               port: 80  
         - name: {{ include "bank.fullname" . }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}
-          livenessProbe:
-            initialDelaySeconds: 1
-            periodSeconds: 5
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 1
-            exec:
-              command:
-                - cat
-                - /home/bank/repo/main.py
+          # livenessProbe:
+          #   initialDelaySeconds: 1
+          #   periodSeconds: 5
+          #   timeoutSeconds: 1
+          #   successThreshold: 1
+          #   failureThreshold: 1
+          #   exec:
+          #     command:
+          #       - cat
+          #       - /home/bank/repo/main.py
           readinessProbe:
             initialDelaySeconds: 1
             periodSeconds: 2
