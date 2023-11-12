@@ -102,12 +102,11 @@ for i in credit['credit']:
 for i in credit['deposit']:
     id_list_dep.append(i['client_id'])
 
-app.route("/api/v1/bank/health_check", methods=["GET"])
+@app.route("/api/v1/bank/health_check", methods=["GET"])
 def health_check():
     response = make_response({"status": "ok", "message": f"Service is OK"})
     response.status = 200
     return response    
-
 
 @app.route("/api/v1/deposit/<int:client_id>", methods=["GET"])
 def read_deposit(client_id):
