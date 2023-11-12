@@ -40,7 +40,9 @@ spec:
             failureThreshold: 1
             exec:
               command:
-                - "cat /etc/nginx/nginx.conf"
+                - /bin/bash
+                - -c 
+                - cat /etc/nginx/nginx.conf
           readinessProbe:
             initialDelaySeconds: 1
             periodSeconds: 2
@@ -61,7 +63,9 @@ spec:
             failureThreshold: 1
             exec:
               command:
-                - "cat /etc/nginx/nginx.conf"
+                - /bin/bash
+                - -c 
+                - cat /etc/nginx/nginx.conf
           readinessProbe:
             initialDelaySeconds: 1
             periodSeconds: 2
