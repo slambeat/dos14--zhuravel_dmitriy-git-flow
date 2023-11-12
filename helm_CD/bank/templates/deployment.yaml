@@ -39,7 +39,7 @@ spec:
             successThreshold: 1
             failureThreshold: 1
             httpGet:
-              host: 127.0.0.1
+              host: 
               scheme: HTTP
               path: /api/v1/bank/health_check
               port: 80  
@@ -52,7 +52,7 @@ spec:
             successThreshold: 1
             failureThreshold: 1
             httpGet:
-              host: 127.0.0.1
+              host: 
               scheme: HTTP
               path: /api/v1/bank/health_check
               port: 5000            
