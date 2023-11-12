@@ -32,6 +32,17 @@ spec:
           volumeMounts:
             - name: {{ .Values.volumeMounts.name }}
               mountPath: {{ .Values.volumeMounts.mountPath }}
+          readinessProbe:
+            initialDelaySeconds: 1
+            periodSeconds: 2
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 1
+            httpGet:
+              host:
+              scheme: HTTP
+              path: /api/v1/bank/health_check
+              port: 80  
         - name: {{ include "bank.fullname" . }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}
           # readinessProbe:
