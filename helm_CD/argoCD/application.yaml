@@ -3,7 +3,7 @@ kind: Application
 metadata:
   name: gigachad-bank
   finalizers:
-    - resources-finalizer.argocd.argoproj.io
+    #- resources-finalizer.argocd.argoproj.io
 spec:
   project: gigachad
   source:
@@ -16,7 +16,7 @@ spec:
       releaseName: gigachad-bank
   destination:
     namespace: gigachad
-    name: dos14
+    name: in-cluster
   syncPolicy:
     automated:
       prune: true
