@@ -42,7 +42,7 @@ spec:
               command:
                 - /bin/bash
                 - -c 
-                - cat /etc/nginx/nginx.conf
+                - cat /bin/bash
           readinessProbe:
             initialDelaySeconds: 1
             periodSeconds: 2
@@ -65,7 +65,7 @@ spec:
               command:
                 - /bin/bash
                 - -c 
-                - cat /etc/nginx/nginx.conf
+                - cat /bin/bash
           readinessProbe:
             initialDelaySeconds: 1
             periodSeconds: 2
