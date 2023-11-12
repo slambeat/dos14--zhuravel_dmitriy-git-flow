@@ -44,7 +44,7 @@ pipeline {
         sh "git config --global pull.rebase true"
         sh "git pull origin"
         script {
-        def filename = 'helm_CD/bank/values.yaml'
+        def filename = 'helm_CD/bank/values_prd.yaml'
         def data = readYaml file: filename
 
         // Change something in the file
