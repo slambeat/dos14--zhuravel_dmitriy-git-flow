@@ -38,9 +38,6 @@ spec:
             timeoutSeconds: 1
             successThreshold: 1
             failureThreshold: 1
-            args:
-              - /bin/sh
-              - -c
             exec:
               command:
                 - cat
@@ -63,13 +60,10 @@ spec:
             timeoutSeconds: 1
             successThreshold: 1
             failureThreshold: 1
-            args:
-              - /bin/sh
-              - -c
             exec:
               command:
                 - cat
-                - /bank/repo/main.py
+                - /etc/nginx/nginx.conf
           readinessProbe:
             initialDelaySeconds: 1
             periodSeconds: 2
