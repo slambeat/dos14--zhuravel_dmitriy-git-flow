@@ -2,7 +2,7 @@ replicaCount: 2
 image:
   repository: slambeat/bank_app
   pullPolicy: IfNotPresent
-  tag: db8af64e7d4e2d417aaf136e180faa2e7aaa2298
+  tag: 8691db82acbedb2d67ea962ba1f3a4e6674cd675
 imagePullSecrets: []
 nameOverride: ''
 fullnameOverride: ''
@@ -34,7 +34,7 @@ ingress:
         path: /bank(.*)
         pathType: ImplementationSpecific
       port: 80
-  tls: 
+  tls:
     secretName: gigachad
 resources: {}
 autoscaling:
