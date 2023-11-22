@@ -2,7 +2,7 @@ replicaCount: 2
 image:
   repository: slambeat/bank_app
   pullPolicy: IfNotPresent
-  tag: 8691db82acbedb2d67ea962ba1f3a4e6674cd675
+  tag: 6c82a721eb06a5159ba0f59e2985f8f098763286
 imagePullSecrets: []
 nameOverride: ''
 fullnameOverride: ''
@@ -22,11 +22,12 @@ service:
   targetport: 80
 ingress:
   className: nginx
-  annotations:
+  annotations: {
     nginx.ingress.kubernetes.io/use-regex: 'true'
     nginx.ingress.kubernetes.io/rewrite-target: /$1
     nginx.ingress.kubernetes.io/service-upstream: 'true'
     cert-manager.io/cluster-issuer: letsencrypt-prod,
+  }
   hosts:
     host: api.gigachad.smodata.net
     http:
