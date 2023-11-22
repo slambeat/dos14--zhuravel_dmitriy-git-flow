@@ -33,7 +33,7 @@ spec:
             - name: {{ .Values.volumeMounts.name }}
               mountPath: {{ .Values.volumeMounts.mountPath }}
           livenessProbe:
-            initialDelaySeconds: 1
+            initialDelaySeconds: 10
             periodSeconds: 2
             timeoutSeconds: 1
             successThreshold: 1
@@ -43,7 +43,7 @@ spec:
               path: /api/v1/bank/health_check
               port: 80 
           readinessProbe:
-            initialDelaySeconds: 1
+            initialDelaySeconds: 10
             periodSeconds: 2
             timeoutSeconds: 1
             successThreshold: 1
@@ -55,7 +55,7 @@ spec:
         - name: {{ include "bank.fullname" . }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}
           livenessProbe:
-            initialDelaySeconds: 1
+            initialDelaySeconds: 10
             periodSeconds: 2
             timeoutSeconds: 1
             successThreshold: 1
@@ -65,7 +65,7 @@ spec:
               path: /api/v1/bank/health_check
               port: 5000  
           readinessProbe:
-            initialDelaySeconds: 1
+            initialDelaySeconds: 10
             periodSeconds: 2
             timeoutSeconds: 1
             successThreshold: 1
