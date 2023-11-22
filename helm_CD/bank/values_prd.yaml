@@ -23,9 +23,9 @@ service:
 ingress:
   className: nginx
   annotations: {
-    nginx.ingress.kubernetes.io/use-regex: 'true'
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-    nginx.ingress.kubernetes.io/service-upstream: 'true'
+    nginx.ingress.kubernetes.io/use-regex: 'true',
+    nginx.ingress.kubernetes.io/rewrite-target: /$1,
+    nginx.ingress.kubernetes.io/service-upstream: 'true',
     cert-manager.io/cluster-issuer: letsencrypt-prod,
   }
   hosts:
