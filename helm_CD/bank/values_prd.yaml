@@ -33,7 +33,8 @@ ingress:
         path: /bank(.*)
         pathType: ImplementationSpecific
       port: 80
-  tls: []
+  tls: 
+    secretName: gigachad
 resources: {}
 autoscaling:
   enabled: false
