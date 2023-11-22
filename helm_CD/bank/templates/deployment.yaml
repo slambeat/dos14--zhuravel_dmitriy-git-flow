@@ -34,15 +34,14 @@ spec:
               mountPath: {{ .Values.volumeMounts.mountPath }}
           livenessProbe:
             initialDelaySeconds: 1
-            periodSeconds: 5
+            periodSeconds: 2
             timeoutSeconds: 1
             successThreshold: 1
             failureThreshold: 1
-            exec:
-              command:
-                - /bin/bash
-                - -c 
-                - cat /bin/bash
+            httpGet:
+              scheme: HTTP
+              path: /api/v1/bank/health_check
+              port: 80 
           readinessProbe:
             initialDelaySeconds: 1
             periodSeconds: 2
@@ -57,15 +56,14 @@ spec:
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}
           livenessProbe:
             initialDelaySeconds: 1
-            periodSeconds: 5
+            periodSeconds: 2
             timeoutSeconds: 1
             successThreshold: 1
             failureThreshold: 1
-            exec:
-              command:
-                - /bin/bash
-                - -c 
-                - cat /bin/bash
+            httpGet:
+              scheme: HTTP
+              path: /api/v1/bank/health_check
+              port: 5000  
           readinessProbe:
             initialDelaySeconds: 1
             periodSeconds: 2
