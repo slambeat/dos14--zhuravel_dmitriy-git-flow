@@ -1,0 +1,83 @@
+replicaCount: 2
+image:
+  repository: slambeat/bank_app
+  pullPolicy: IfNotPresent
+  tag: 3203f067bc9d30f61566abf1db990e853fb6ca06
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: bank-service-acc
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
+service:
+  type: ClusterIP
+  port: 80
+  protocol: TCP
+  targetport: 80
+ingress:
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: 'true'
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/service-upstream: 'true'
+  hosts:
+    host: api.gigachad.smodata.net
+    http:
+      paths:
+        path: /bank(.*)
+        pathType: ImplementationSpecific
+      port: 80
+  tls: []
+resources: {}
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+volumes: []
+volumeMounts:
+  name: nginx-config
+  mountPath: /etc/nginx
+nodeSelector: {}
+tolerations: []
+affinity: {}
+deployment:
+  strategy:
+    type: RollingUpdate
+    maxSurge: 2
+  template:
+    specNginx:
+      name: nginx
+      image: nginx:1.25.2
+      ports:
+        containerPort: 80
+        name: http
+        protocol: TCP
+labels:
+  app: bank
+  bank: gigachad
+  env: prd
+envVariables:
+  dbEnv:
+    name: PG_DATABASE
+    dbname: gigachadbank
+  userEnv:
+    name: PG_USER
+    secret_key: username
+    secret_name: gigachad-db-creds
+  passEnv:
+    name: PG_PASSWORD
+    secret_key: password
+    secret_name: gigachad-db-creds
+  hostEnv:
+    name: PG_HOST
+    host: omegabank-rds-tf.cearikylb8tb.eu-west-1.rds.amazonaws.com
+  portEnv:
+    name: PG_PORT
+    port: '5432'

@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gigachad-bank
+  finalizers:
+    #- resources-finalizer.argocd.argoproj.io
+spec:
+  project: gigachad
+  source:
+    repoURL: 'https://github.com/slambeat/dos14--zhuravel_dmitriy-git-flow.git'
+    path: helm_CD/bank
+    targetRevision: feature-helm-CD
+    helm:
+      valueFiles:
+        - /helm_CD/bank/values.yaml
+      releaseName: gigachad-bank
+  destination:
+    namespace: gigachad
+    name: in-cluster
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
