@@ -89,8 +89,8 @@ spec:
                 name: {{ .Values.envVariables.passEnv.secret_name }}
           - name: {{ .Values.envVariables.hostEnv.name }}
             value: {{ .Values.envVariables.hostEnv.host }}
-          - name: {{ .Values.envVariables.hostEnv.name }}
-            value: {{ .Values.envVariables.hostEnv.port }}
+          - name: {{ .Values.envVariables.portEnv.name }}
+            value: {{ .Values.envVariables.portEnv.port | squote }}
       volumes:
         - configMap:
             name: {{ include "bank.name" . }}-nginx-config
