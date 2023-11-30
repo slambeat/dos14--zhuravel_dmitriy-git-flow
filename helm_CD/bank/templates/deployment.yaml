@@ -89,7 +89,7 @@ spec:
                 name: {{ .Values.envVariables.passEnv.secret_name }}
           - name: {{ .Values.envVariables.hostEnv.name }}
             value: {{ .Values.envVariables.hostEnv.host }}
-          - name: {{ .Values.envVariabl.portEnv.name }}
+          - name: {{ .Values.envVariables.portEnv.name }}
             value: {{ .Values.envVariables.portEnv.port }}
       volumes:
         - configMap:
