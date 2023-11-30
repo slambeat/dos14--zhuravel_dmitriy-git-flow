@@ -2,7 +2,7 @@ replicaCount: 2
 image:
   repository: slambeat/bank_app
   pullPolicy: IfNotPresent
-  tag: 03736a8ff30287e3bd91a7618ebe33ccd3f2c701
+  tag: bb8a86137d91e0b9044d04781de6a5e00c0d09f6
 imagePullSecrets: []
 nameOverride: ''
 fullnameOverride: ''
