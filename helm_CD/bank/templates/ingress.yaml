@@ -20,3 +20,7 @@ spec:
                 name: {{ include "bank.fullname" . }}-svc
                 port:
                   number: {{ .Values.ingress.hosts.http.port }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.hosts.host }}
+      secretName: {{ .Values.ingress.tls.secretName }}-tls

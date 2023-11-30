@@ -1,238 +1,285 @@
-import os, json, csv, time
+import abc
+import json
 import yaml
-from account_clients import AccountClient
-
-from flask import Flask, abort, make_response, request
-app = Flask(__name__)
+import config
 import threading
+from account_clients import AccountClient
+from datetime import datetime, date
+from flask import Flask, request, jsonify, make_response
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
+from psycopg2.errors import NotNullViolation, UniqueViolation
 
-class BankProduct:
-    def __init__(self, client_id, percent, term, sum):
-        # self.__entity_id = entity_id
-        self.__percent = percent
-        self.__term = term
-        self.__sum = sum
-        self.__end_sum = self.__sum * (1 + (self.__percent / 100) ** self.__term)
-        self.__end_sum_dep = self.__sum + (self.__sum * self.__percent * self.__term )/ 100 
 
+app = Flask(__name__)
+
+app.config[
+    "SQLALCHEMY_DATABASE_URI"
+] = f"postgresql://{config.PG_USER}:{config.PG_PASSWORD}@{config.PG_HOST}:{config.PG_PORT}/{config.PG_DATABASE}"
+db = SQLAlchemy(app)
+
+class BankProduct(db.Model):
+    __abstract__ = True
+
+    client_id = db.mapped_column(db.Integer)
+    percent = db.mapped_column(db.Double)
+    sum = db.mapped_column(db.Double)
+    term = db.mapped_column(db.Integer)
+    periods = db.mapped_column(db.Integer)
+    closed = db.mapped_column(db.Boolean, default = False)
+
+    def __init__(self, **kwargs):
+        if 'closed' in kwargs:
+            raise ValueError("closed attribute should not set")
+        if kwargs["sum"] < 0:
+            raise ValueError("sum must be more than 0")
+        if kwargs["percent"] < 0:
+            raise ValueError("percent must be more than 0")
+        if kwargs["term"] < 0:
+            raise ValueError("term must be more than 0")
+        if "client_id" not in kwargs:
+            raise ValueError("client_id must be defined")
+        kwargs["periods"] = kwargs["periods"] if 'periods' in kwargs else (kwargs['term'] * 12)
+        for cls_field, cls_field_value in kwargs.items():
+            setattr(self, cls_field, cls_field_value)
+
+    @property
+    def total_periods(self):
+        return self.term * 12
+
+    @property
     def end_sum(self):
-        return self.__end_sum 
-    
-    def end_sum_dep(self):
-        return self.__end_sum_dep
-    
-    def sum(self):
-        return self.__sum
+        return self.sum * (1 + self.percent / 100) ** self.term
 
-    def process(self):
-        pass
+
+    @property
+    def monthly_fee(self):
+        return self.end_sum / self.total_periods
+
+
+    def to_dict(self):
+        return {
+            "client_id": self.client_id,
+            "percent": self.percent,
+            "sum": self.sum,
+            "term": self.term,
+            "periods": self.periods,
+        }
+
+
+    def __eq__(self, other):
+        if isinstance(other, BankProduct):
+            return (
+                self.client_id == other.client_id
+                and self.percent == other.percent
+                and self.sum == other.sum
+                and self.term == other.term
+            )
+
+        return NotImplemented
+
+    def __hash__(self):
+        return hash((self.client_id, self.percent, self.sum, self.term))
+
+
 
 class Credit(BankProduct):
-    def __init__(self, client_id, percent, term, sum, periods):
-        BankProduct.__init__(self, client_id, percent, term, sum)
-        self.__client_id = client_id
-        self.__periods = periods
-        self.__closed = False
-        self.montly_fee = int(BankProduct.end_sum(self) / (term * 12))
+    __tablename__ = "credits"
+    credit_id = db.mapped_column(db.Integer, primary_key=True)
 
-    def close(self):
-        return self.__closed
-    
-    def periods(self):
-        return self.__periods
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        client = AccountClient(self.client_id)
+        bank = AccountClient(0)
+        if self.periods == self.total_periods:
+            client.transaction(add=self.sum)
+            bank.transaction(substract=self.sum)
 
-    def client_id(self):
-        return self.__client_id    
 
 
     def process(self):
-        AccountClientObj = AccountClient(self.__client_id)
-        BankObj = AccountClient(0)
-        AccountClientObj.transaction(substract=self.montly_fee)
-        BankObj.transaction(add=self.montly_fee)
+        if not self.closed:
+            client = AccountClient(self.client_id)
+            bank = AccountClient(0)
+            client.transaction(substract=self.monthly_fee)
+            bank.transaction(add=self.monthly_fee)
+
+            self.periods -= 1
+            if self.periods == 0:
+                self.closed = True
 
 
 class Deposit(BankProduct):
-    def __init__(self, client_id, percent, term, sum, periods):
-        BankProduct.__init__(self, client_id, percent, term, sum)
-        self.__periods = periods
-        self.__closed = False
-        self.__client_id = client_id
-        self.montly_fee = int((BankProduct.end_sum_dep(self) - BankProduct.sum(self)) / (term * 12))
-    
-    def periods(self):
-        return self.__periods
-    
-    def close(self):
-        return self.__closed
-    
+    __tablename__ = "deposits"
+    deposit_id = db.mapped_column(db.Integer, primary_key=True)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        client = AccountClient(self.client_id)
+        bank = AccountClient(0)
+        if self.periods == self.total_periods:
+            client.transaction(substract=self.sum)
+            bank.transaction(add=self.sum)
+
     def process(self):
-        AccountClientObj = AccountClient(self.__client_id)
-        AccountClientObj.withdraw = False
-        BankObj = AccountClient(0)
-        AccountClientObj.transaction(add=self.montly_fee)
-        BankObj.transaction(substract=self.montly_fee)
-       
+        if not self.closed:
+            client = AccountClient(self.client_id)
+            bank = AccountClient(0)
 
-with open('credits_deposits.yaml', 'r') as f:
-    credit = yaml.safe_load(f)
+            client.transaction(add=self.monthly_fee)
+            bank.transaction(substract=self.monthly_fee)
 
-#Этот блок только для заполнения periods, выполняется только если term=-1
-for i in credit['credit']:
-    if i['periods'] == -1:
-        i['periods'] = i['term'] * 12
-    with open('credits_deposits.yaml', 'w') as f:
-        yaml.dump(credit, f)
-
-for i in credit['deposit']:
-    if i['periods'] == -1:
-        i['periods'] = i['term'] * 12
-    with open('credits_deposits.yaml', 'w') as f:
-        yaml.dump(credit, f)
-
-with open('credits_deposits.yaml', 'w') as f:
-    yaml.dump(credit, f)
-
-id_list_cred = []
-id_list_dep = []
-
-for i in credit['credit']:
-    id_list_cred.append(i['client_id'])
-
-for i in credit['deposit']:
-    id_list_dep.append(i['client_id'])
+            self.periods -= 1
+            if self.periods == 0:
+                self.closed = True
 
 
-@app.route("/api/v1/deposit/<int:client_id>", methods=["GET"])
-def read_deposit(client_id):
-    response = make_response({"status": "error", "message": f"Client {client_id} does not have active deposits"})
-    response.status = 400
-    response_not_found = make_response({"status": "error", "message": f"There is no such client in the base"})
-    response_not_found.status = 404
-    for i in credit['deposit']:
-        if i['client_id'] == int(client_id):
-            return i
-        elif i['client_id'] == int(client_id) and int(client_id) not in id_list_dep:
-            return response
-        elif int(client_id) not in id_list_cred and int(client_id) not in id_list_dep:
-            return response_not_found
+@app.route("/api/v1/credits/<int:client_id>", methods=["GET"])
+def get_credits(client_id):
+    credits = db.session.query(Credit).filter_by(client_id=client_id,closed=False).all()
+    if len(credits) == 0:
+        error_massage = f"client {client_id} does not have active credits"
+        return jsonify({"status": "error", "message": error_massage}), 404
+    else:
+        return jsonify(credits[0].to_dict())
 
-@app.route("/api/v1/credit/<int:client_id>", methods=["GET"])
-def read_credit(client_id):
-    response = make_response({"status": "error", "message": f"Client {client_id} does not have active credits"})
-    response.status = 400
-    response_not_found = make_response({"status": "error", "message": f"There is no such client in the base"})
-    response_not_found.status = 404
-    for i in credit['credit']:
-        if i['client_id'] == int(client_id):
-            return i
-        elif i['client_id'] == int(client_id) and int(client_id) not in id_list_cred:
-            return response
-        elif int(client_id) not in id_list_cred and int(client_id) not in id_list_dep:
-            return response_not_found
 
-@app.route("/api/v1/credits", methods=["GET"])
-def read_credit_all():
-    all_cred = []
-    for i in credit['credit']:
-        all_cred.append(i)
-    return all_cred
-
+@app.route("/api/v1/deposits/<int:client_id>", methods=["GET"])
+def get_deposit(client_id):
+    deposits = db.session.query(Deposit).filter_by(client_id=client_id,closed=False).all()
+    if len(deposits) == 0:
+        error_message = f"Client {client_id} does not have active deposits"
+        return jsonify({"status": "error", "message": error_message}), 404
+    else:
+        return jsonify(deposits[0].to_dict())
 
 @app.route("/api/v1/deposits", methods=["GET"])
-def read_deposit_all():
-    all_dep = []
-    for i in credit['deposit']:
-        all_dep.append(i)
-    return all_dep
+def get_all_deposits():
+    deposits = db.session.query(Deposit).filter_by(closed=False).all()
+    deposits = [ d.to_dict() for d in deposits]
+    return jsonify(deposits)
 
-# curl --request PUT --header 'Content-Type: application/json' --data '{"client_id": 27, "percent": 13, "sum": 100000, "term": 2}' localhost:5000/api/v1/credits
+
+@app.route("/api/v1/credits", methods=["GET"])
+def get_all_credits():
+    credits = db.session.query(Credit).filter_by(closed=False).all()
+    credits = [ c.to_dict() for c in credits]
+    return jsonify(credits)
+
+
 @app.route("/api/v1/credits", methods=["PUT"])
 def create_credit():
-    new_credit = request.json
-    client_id = new_credit['client_id']
-    response = make_response({"status": "error", "message": f'Credit for client {client_id} already exists'})
-    response.status = 400
-    if new_credit['client_id'] in id_list_cred:
-        return response
-    else:
-        credit_data ={
-            "client_id": new_credit['client_id'],
-            "percent": new_credit['percent'],
-            "periods": new_credit['term'] * 12,
-            "sum": new_credit['sum'],
-            "term": new_credit['term']
-        }
-        credit['credit'].append(credit_data)     
-        id_list_cred.append(new_credit['client_id'])
-        with open('credits_deposits.yaml', 'w') as f:
-            yaml.dump(credit, f)
-        return credit                  
+    try:
+        data = request.get_json()
+
+        credit = Credit(**data)
+
+        credits = db.session.query(Credit).filter_by(client_id=credit.client_id,closed=False).all()
+        if credits:
+            return make_response(
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": f"Client {credit.client_id} already has an open credit",
+                    }
+                ),
+                400,
+            )
+        db.session.add(credit)
+        db.session.commit()
+        return (
+            jsonify({"status": "ok", "message": f"Credit added for client {credit.client_id}"}),
+            201,
+        )
+    except KeyError as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    except ValueError as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
 
 @app.route("/api/v1/deposits", methods=["PUT"])
 def create_deposit():
-    new_deposit = request.json
-    client_id = new_deposit['client_id']
-    response = make_response({"status": "error", "message": f'Deposit for client {client_id} already exists'})
-    response.status = 400
-    if new_deposit['client_id'] in id_list_dep:
-        return response
-    else:
-        deposit_data ={
-            "client_id": new_deposit['client_id'],
-            "percent": new_deposit['percent'],
-            "periods": new_deposit['term'] * 12,
-            "sum": new_deposit['sum'],
-            "term": new_deposit['term']
-            }
-        credit['deposit'].append(deposit_data)
-        id_list_dep.append(new_deposit['client_id'])
-        with open('credits_deposits.yaml', 'w') as f:
-            json.dump(credit, f)
-        return credit
+    try:
+        data = request.get_json()
 
-def process_thread():
-    while id_list_cred != [] or id_list_dep != []:               
-        for i in credit['credit']:
-            if i['periods'] == 0:
-                credit_data ={
-                    "client_id": i['client_id'],
-                    "percent": i['percent'],
-                    "periods": i['periods'],
-                    "sum": i['sum'],
-                    "term": i['term'],
-                }
-                credit['credit'].remove(credit_data)
-                id_list_cred.remove(i['client_id'])
-            elif i['periods'] > 0:
-                obj = Credit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods'])
-                obj.process()
-                i['periods'] -= 1
-        for i in credit['deposit']:
-            if i['periods'] == 0:
-                deposit_data ={
-                    "client_id": i['client_id'],
-                    "percent": i['percent'],
-                    "periods": i['periods'],
-                    "sum": i['sum'],
-                    "term": i['term'],
-                }
-                credit['deposit'].remove(deposit_data)
-                id_list_dep.remove(i['client_id'])
-            elif i['periods'] > 0:
-                obj = Deposit(i['client_id'], i['percent'], i['term'], i['sum'], i['periods'])
-                obj.process()
-                i['periods'] -= 1
-        with open('credits_deposits.yaml', 'w') as f:
-            yaml.dump(credit, f)
-        time.sleep(1)
+        deposit = Deposit(**data)
 
-def base_check():
+        deposits = db.session.query(Deposit).filter_by(client_id=deposit.client_id,closed=False).all()
+        if deposits:
+            return make_response(
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": f"Client {deposit.client_id} already has an open deposit",
+                    }
+                ),
+                400,
+            )
+        db.session.add(deposit)
+        db.session.commit()
+        return (
+            jsonify({"status": "ok", "message": f"Deposit added for client {deposit.client_id}"}),
+            201,
+        )
+    except KeyError as e:
+        return jsonify({"status": "error", "message": f"Missing attribute {str(e)}"}), 400
+    except ValueError as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+
+@app.route("/api/v1/bank/health_check", methods=["GET"])
+def health_check():
+    return jsonify({"status": "OK"}), 200
+
+
+
+def process_credits_and_deposits():
+
+    import time
+
     while True:
-        if id_list_cred != [] or id_list_dep != []:
-            process_thread()
+        with app.app_context():
+            credits = db.session.query(Credit).filter_by(closed=False).all()
+            deposits = db.session.query(Deposit).filter_by(closed=False).all()
 
-thread = threading.Thread(target=base_check)
-thread.start()
-if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0')
+            for credit in credits:
+                credit.process()
+            for deposit in deposits:
+                deposit.process()
+
+
+            db.session.add_all(deposits)
+            db.session.add_all(credits)
+            db.session.commit()
+        time.sleep(10)
+
+def seed_data():
+    credits = db.session.query(Credit).all()
+    deposits = db.session.query(Deposit).all()
+
+    with open("data/credits_deposits.yaml", "r") as f:
+        product_data = yaml.safe_load(f)
+        credits_data = product_data["credits"]
+        for credit in credits_data:
+            credit = Credit(**credit)
+            if credit not in credits:
+                db.session.add(credit)
+                db.session.commit()
+
+        deposits_data = product_data["deposits"]
+        for deposit in deposits_data:
+            deposit = Deposit(**deposit)
+            if deposit not in deposits:
+                db.session.add(deposit)
+                db.session.commit()
+
+with app.app_context():
+    db.create_all()
+    seed_data()
+
+credit_deposit_thread = threading.Thread(target=process_credits_and_deposits)
+credit_deposit_thread.start()
+
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')
