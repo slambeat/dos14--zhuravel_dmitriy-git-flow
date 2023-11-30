@@ -90,7 +90,7 @@ spec:
           - name: {{ .Values.envVariables.hostEnv.name }}
             value: {{ .Values.envVariables.hostEnv.host }}
           - name: {{ .Values.envVariables.portEnv.name }}
-            value: {{ .Values.envVariables.portEnv.port }}
+            value: {{ .Values.envVariables.portEnv.port | squote }}
       volumes:
         - configMap:
             name: {{ include "bank.name" . }}-nginx-config
